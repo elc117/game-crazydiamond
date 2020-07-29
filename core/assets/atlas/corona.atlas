@@ -1,0 +1,19 @@
+
+corona.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+coronga-1.png
+  rotate: false
+  xy: 1, 1
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
+coronga-4.png
+  rotate: false
+  xy: 323, 1
+  size: 320, 320
+  orig: 320, 320
+  offset: 0, 0
+  index: -1
