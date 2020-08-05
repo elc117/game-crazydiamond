@@ -22,6 +22,12 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 
 public class MyGdxGame extends ApplicationAdapter {
 
+	enum Screen{
+		TITLE, MAIN_GAME, GAME_OVER;
+	}
+	
+	Screen currentScreen = Screen.MAIN_GAME;
+
 	Utils utils = new Utils();	
 
 	private SpriteBatch batch;
@@ -74,18 +80,18 @@ public class MyGdxGame extends ApplicationAdapter {
 	private boolean basicAttackCorona = false;
 	private boolean userInteraction = true;
 	private boolean nextCommentPermission = true;
-	private boolean coronaDamage = false;
-	private boolean globuloDamage = false;
+	private boolean coronaLoseLife;
 	private boolean roundBegin = true;
 	private boolean globuloTurn = false;
 	private boolean coronaTurn = false;
 	private boolean coronaWillDefence = false;
 	private boolean globuloEnd = false;
 	private boolean coronaEnd = false;
-	private boolean playingMusic;
+	private boolean showBar = false;
 	private boolean globuloDefence = false;
 	private boolean coronaDefence = false;
 	private boolean coronaControl;
+	private boolean firstRound = true;
 
 	private float beginGLobuloDefence = 0;
 	private float beginCoronaDefence = 0;
@@ -98,6 +104,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	private int coronaDamageInt;
 	private int globuloDamageInt;
 	private int commentID = 0;
+	private int score = 0;
 
 	private BitmapFont font;
 
@@ -119,13 +126,20 @@ public class MyGdxGame extends ApplicationAdapter {
 	
 	@Override
 	public void create () {
+
 	   
-	   musicTheme = Gdx.audio.newMusic(Gdx.files.internal("sounds/theme.mp3"));
+	   
+	   musicTheme = Gdx.audio.newMusic(Gdx.files.internal("sounds/battleTheme.mp3"));
 	   musicTheme.setVolume(0.2f);
 	   musicTheme.setLooping(true);
-	   musicTheme.play();
+
+	   musicMenu = Gdx.audio.newMusic(Gdx.files.internal("sounds/begin.mp3"));
+	   musicMenu.setVolume(0.2f);
+	   musicMenu.setLooping(true);
+	   musicMenu.play();
+	   
 	   musicLowLife = Gdx.audio.newMusic(Gdx.files.internal("sounds/lowLife.mp3"));
-	   musicLowLife.setVolume(0.05f);
+	   musicLowLife.setVolume(0.08f);
 	   musicLowLife.setLooping(true);
 
 	   soundAttack = Gdx.audio.newSound(Gdx.files.internal("sounds/explosion.ogg"));
@@ -192,12 +206,26 @@ public class MyGdxGame extends ApplicationAdapter {
 
 			
 			if(keyCode == Input.Keys.ENTER && (nextCommentPermission)){
-				
-				System.out.println(nextCommentPermission);
-				commentID = utils.nextString(commentID, coronaDamageInt, coronaAttackHitRate, coronaDefenceHitRate);
+				if(firstRound){
+					musicTheme.play();
+					musicMenu.stop();
+					firstRound = false;
+					showBar = true;
+				}
+				commentID = utils.nextString(string);
 				string = utils.getString(commentID);
 				nextCommentPermission = utils.permitComment(commentID);
-				//System.out.println(commentID);
+			}
+			if(currentScreen == Screen.GAME_OVER && keyCode == Input.Keys.ENTER){
+				score = 0;
+				coronaLife = 300;
+				globuloLife = 300;
+				currentScreen = Screen.MAIN_GAME;
+				firstRound = true;
+				musicMenu.play();
+				string = "Game Start   -   [ENTER]";
+				commentID = 0;
+				nextCommentPermission = true;
 			}
 
 
@@ -223,185 +251,218 @@ public class MyGdxGame extends ApplicationAdapter {
 	@Override
 	public void render () {
 
-		
-		elapsedTime += Gdx.graphics.getDeltaTime();
-		//System.out.println("commentId:"+commentID+"\n"+"permission:"+nextCommentPermission);
+		if(currentScreen == Screen.MAIN_GAME){
+			elapsedTime += Gdx.graphics.getDeltaTime();
+			//System.out.println("commentId:"+commentID+"\n"+"permission:"+nextCommentPermission);
 
-		if(roundBegin == true && commentID == 1){//begin round with random status
+			if(roundBegin == true && commentID == 1){//begin round with random status
 
-			globuloAttackHitRate = utils.random(101);
-			globuloDefenceHitRate = utils.random(101);
-			globuloDamageInt = utils.random(101);
-			coronaAttackHitRate = utils.random(101);
-			coronaDefenceHitRate = utils.random(101);
-			coronaDamageInt = utils.random(101);
+				globuloAttackHitRate = utils.random(101);
+				globuloDefenceHitRate = utils.random(101);
+				globuloDamageInt = utils.random(101);
+				coronaAttackHitRate = utils.random(101);
+				coronaDefenceHitRate = utils.random(101);
+				coronaDamageInt = utils.random(101);
 
-			
+				
 
-			if(coronaAttackHitRate < 30){
-				coronaWillDefence = true;	
-				coronaDamageInt = 0;
+				if(coronaAttackHitRate < 30){
+					coronaWillDefence = true;	
+					coronaDamageInt = 0;
+				}
+				
+				if(globuloAttackHitRate < 30)
+					globuloDamageInt = 0;
+				
+				
+				System.out.println("GlobuloAttack:"+globuloDamageInt);
+				System.out.println("GlobuloDefence:"+globuloDefenceHitRate);
+				System.out.println("CoronaAttack:"+coronaDamageInt);
+				System.out.println("CoronaDefence:"+coronaDefenceHitRate);
+				CoronaQuotes quote = new CoronaQuotes();
+				string = quote.returnCoronaQuote(coronaDamageInt, globuloDamageInt, coronaAttackHitRate, globuloAttackHitRate);
+				nextCommentPermission = true;
+				roundBegin = false;
+				
 			}
+			if(coronaTurn){
+				nextCommentPermission = false;
+				beginCoronaTime = elapsedTime;
+				coronaTurn = false;
+				coronaControl = true;
+			}
+			else if(elapsedTime > beginCoronaTime+2 && coronaControl){		
+				coronaControl = false;
+				if(coronaWillDefence){
+					coronaDamageInt = 0;
+					coronaDefence = true;
+					soundDefence.play(0.2f);
+					beginCoronaDefence = elapsedTime;
+				}
+				else{
+					basicAttackCorona = true;
+					coronaDefenceHitRate = 0;
+				}
+			}
+
 			
-			if(globuloAttackHitRate < 30)
+		
+		if(elapsedTime > beginGLobuloDefence + 2 && globuloDefence){//end globulo Defence
+				globuloDefence = false;
+				commentID = utils.nextStringGlobuloDefense(globuloDefenceHitRate);
+				string = utils.getString(commentID);
+				nextCommentPermission = true;
+				globuloTurn = false;
+				coronaTurn = true;
+				userInteraction = true;
 				globuloDamageInt = 0;
-			
-			
-			System.out.println("GlobuloAttack:"+globuloDamageInt);
-			System.out.println("GlobuloDefence:"+globuloDefenceHitRate);
-			System.out.println("CoronaAttack:"+coronaDamageInt);
-			System.out.println("CoronaDefence:"+coronaDefenceHitRate);
-			CoronaQuotes quote = new CoronaQuotes();
-			string = quote.returnCoronaQuote(coronaDamageInt, globuloDamageInt, coronaAttackHitRate, globuloAttackHitRate);
-			nextCommentPermission = true;
-			roundBegin = false;
-			
+				globuloEnd = true;
 		}
-		if(coronaTurn){
-			nextCommentPermission = false;
-			beginCoronaTime = elapsedTime;
-			coronaTurn = false;
-			coronaControl = true;
+		if(elapsedTime > beginCoronaDefence + 2 && coronaDefence){//end corona defence
+				coronaDefence = false;
+				coronaTurn = false;
+				coronaEnd = true;
+				coronaWillDefence = false;
+				commentID = utils.coronaDefense(coronaDefenceHitRate);
+				string = utils.getString(commentID);
+				nextCommentPermission = true;
+				coronaLife -= utils.decreaseLife(globuloDamageInt, coronaDefenceHitRate);
+				coronaLoseLife = true;
 		}
-		else if(elapsedTime > beginCoronaTime+2 && coronaControl){		
-			coronaControl = false;
-			if(coronaWillDefence){
-				coronaDamageInt = 0;
-				coronaDefence = true;
-				soundDefence.play(0.2f);
-				beginCoronaDefence = elapsedTime;
-			}
-			else{
-				basicAttackCorona = true;
-				coronaDefenceHitRate = 0;
-			}
+			
+
+
+		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+		Gdx.gl.glClearColor(0, 0, 0, 1);
+		batch.begin();
+		
+		sprite.draw(batch);
+		batch.setProjectionMatrix(camera.combined);
+		
+
+		globuloLifeBar.begin(ShapeType.Filled);
+		coronaLifeBar.begin(ShapeType.Filled);
+		globuloLifeBar.setColor(globuloColor);
+		coronaLifeBar.setColor(coronaColor);
+		globuloColor = utils.checkLifeBar(globuloLife);
+		coronaColor = utils.checkLifeBar(coronaLife);
+
+		if(globuloColor == Color.RED){
+			musicTheme.stop();
+			musicLowLife.play();
 		}
 
-	   	
-	   
-	   if(elapsedTime > beginGLobuloDefence + 2 && globuloDefence){//end globulo Defence
-			globuloDefence = false;
-			commentID = utils.nextStringGlobuloDefense(globuloDefenceHitRate);
-			string = utils.getString(commentID);
-			nextCommentPermission = true;
-			globuloTurn = false;
-			coronaTurn = true;
-			userInteraction = true;
-			globuloDamageInt = 0;
-			globuloEnd = true;
+		if(showBar){
+			globuloLifeBar.rect(10,100,10,globuloLife);
+			coronaLifeBar.rect(770,100,10,coronaLife);
 		}
-	   if(elapsedTime > beginCoronaDefence + 2 && coronaDefence){
-			coronaDefence = false;
-			coronaTurn = false;
+
+		
+		
+
+		
+		batch.draw((TextureRegion)animationGlobulo.getKeyFrame(elapsedTime, true), globuloPosX, globuloPosY);
+		batch.draw((TextureRegion)animationCommentBox.getKeyFrame(elapsedTime, true), -450, -525);
+		if(globuloDefence){
+				batch.draw((TextureRegion)animationGlobuloDef.getKeyFrame(elapsedTime, true), globuloPosX, globuloPosY);
+				string = "			      *Defending*";
+				
+			}
+				
+		
+		batch.draw((TextureRegion)animationCorona.getKeyFrame(elapsedTime, true), coronaPosX, coronaPosY);
+		
+
+		if(coronaDefence){
+				batch.draw((TextureRegion)animationCoronaDef.getKeyFrame(elapsedTime, true), coronaPosX, coronaPosY);
+				nextCommentPermission = false;
+				string = "  *Corona Defending*";
+		}
+		if(basicAttackGlobulo && attackGlobuloPos < coronaPosX && globuloTurn){   
+				batch.draw((TextureRegion)animationGlobuloAttack.getKeyFrame(elapsedTime, true), attackGlobuloPos, globuloPosY+50);
+				attackGlobuloPos += 8;
+				string = "      *Attacking*";
+				
+			}
+			else if(globuloTurn && basicAttackGlobulo){
+				commentID = utils.nextStringGlobuloAttack(globuloDamageInt, globuloAttackHitRate);
+				string = utils.getString(commentID);
+				nextCommentPermission = true;
+				basicAttackGlobulo = false;
+				attackGlobuloPos = globuloPosX+50;
+				globuloTurn = false;
+				coronaTurn = true;
+				userInteraction = true;
+				globuloDefenceHitRate = 0;
+				globuloEnd = true;
+				if(globuloAttackHitRate>=30)
+					soundAttack.play(0.2f);
+				if(!coronaWillDefence){
+					coronaLife -= utils.decreaseLife(globuloDamageInt, coronaDefenceHitRate); 
+					coronaLoseLife = true;
+				}
+			}
+			
+
+			
+			
+		if(basicAttackCorona == true && attackCoronaPos > globuloPosX+100 && basicAttackCorona == true){
+				batch.draw((TextureRegion)animationCoronaAttack.getKeyFrame(elapsedTime, true), attackCoronaPos, coronaPosY+50);
+				attackCoronaPos -= 8;
+				nextCommentPermission = false;
+				string = "    *Corona Attack*";
+		}
+		else if(basicAttackCorona == true){
+			basicAttackCorona = false;
+			attackCoronaPos = coronaPosX;
+			commentID = utils.coronaStringAttack(coronaAttackHitRate, coronaDamageInt);
+			string = utils.getString(commentID);
 			coronaEnd = true;
-			coronaWillDefence = false;
-			commentID = utils.coronaDefense(coronaDefenceHitRate);
-			string = utils.getString(commentID);
 			nextCommentPermission = true;
+
+			soundAttack.play(0.2f);
 		}
+
+		if(coronaEnd && globuloEnd){
+			coronaEnd = false;
+			globuloEnd = false;
+			roundBegin = true;
+			if(!coronaLoseLife)
+				coronaLife -= utils.decreaseLife(globuloDamageInt, coronaDefenceHitRate);
+			globuloLife -= utils.decreaseLife(coronaDamageInt, globuloDefenceHitRate);
+			coronaLoseLife = false;
+		}
+
 		
 
 
-	   Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-	   batch.begin();
-	   
-	   sprite.draw(batch);
-	   batch.setProjectionMatrix(camera.combined);
-	   
+		font.draw(batch, string, -350, -180);
+		batch.end();
+		globuloLifeBar.end();
+		coronaLifeBar.end();
 
-	   globuloLifeBar.begin(ShapeType.Filled);
-	   coronaLifeBar.begin(ShapeType.Filled);
-	   globuloLifeBar.setColor(globuloColor);
-	   coronaLifeBar.setColor(coronaColor);
-	   globuloColor = utils.checkLifeBar(globuloLife);
-	   coronaColor = utils.checkLifeBar(coronaLife);
-
-	   if(globuloColor == Color.RED){
-		   musicTheme.stop();
-		   musicLowLife.play();
-	   }
-
-	   
-	   globuloLifeBar.rect(10,100,10,globuloLife);
-	   coronaLifeBar.rect(770,100,10,coronaLife);
-	   
-	   
-
-	   
-	   batch.draw((TextureRegion)animationGlobulo.getKeyFrame(elapsedTime, true), globuloPosX, globuloPosY);
-	   batch.draw((TextureRegion)animationCommentBox.getKeyFrame(elapsedTime, true), -450, -525);
-	   if(globuloDefence){
-			   batch.draw((TextureRegion)animationGlobuloDef.getKeyFrame(elapsedTime, true), globuloPosX, globuloPosY);
-			   string = "			      *Defending*";
-			   
+		if(globuloLife <= 0 || coronaLife <= 0){
+			musicLowLife.stop();
+			musicTheme.stop();
+			currentScreen = Screen.GAME_OVER;
 		}
-			   
-	   
-	   batch.draw((TextureRegion)animationCorona.getKeyFrame(elapsedTime, true), coronaPosX, coronaPosY);
-	   
+	}
 
-	   if(coronaDefence){
-			   batch.draw((TextureRegion)animationCoronaDef.getKeyFrame(elapsedTime, true), coronaPosX, coronaPosY);
-			   nextCommentPermission = false;
-			   string = "  *Corona Defending*";
-	   }
-	   if(basicAttackGlobulo && attackGlobuloPos < coronaPosX && globuloTurn){   
-			batch.draw((TextureRegion)animationGlobuloAttack.getKeyFrame(elapsedTime, true), attackGlobuloPos, globuloPosY+50);
-			attackGlobuloPos += 8;
-			string = "      *Attacking*";
+	if(currentScreen == Screen.GAME_OVER){
+			String scoreStr;
+			showBar = false;
+			Gdx.gl.glClearColor(0, 0, 0, 1);
+            Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+			scoreStr = Integer.toString(utils.scoreGet(coronaLife, globuloLife));
+			batch.begin();
+            font.draw(batch, utils.matchResult(coronaLife, globuloLife), -130, 120);
+            font.draw(batch, "Score:", -190, 21);
+            font.draw(batch, scoreStr,  50, 21);
+            font.draw(batch, "Press enter to restart.", Gdx.graphics.getWidth()/7-450, Gdx.graphics.getWidth()/8 -160);
+			batch.end();
 			
-		}
-		else if(globuloTurn && basicAttackGlobulo){
-			commentID = utils.nextStringGlobuloAttack(globuloDamageInt, globuloAttackHitRate);
-			string = utils.getString(commentID);
-			nextCommentPermission = true;
-			basicAttackGlobulo = false;
-			attackGlobuloPos = globuloPosX+50;
-			globuloTurn = false;
-			coronaTurn = true;
-			userInteraction = true;
-			globuloDefenceHitRate = 0;
-			globuloEnd = true;
-			if(globuloAttackHitRate>=30)
-				soundAttack.play(0.2f);
-		}
+	}
 
-		
-
-		
-		
-	   if(basicAttackCorona == true && attackCoronaPos > globuloPosX+100 && basicAttackCorona == true){
-			batch.draw((TextureRegion)animationCoronaAttack.getKeyFrame(elapsedTime, true), attackCoronaPos, coronaPosY+50);
-			attackCoronaPos -= 8;
-			nextCommentPermission = false;
-			string = "    *Corona Attack*";
-	   }
-	   else if(basicAttackCorona == true){
-		   basicAttackCorona = false;
-		   attackCoronaPos = coronaPosX;
-		   commentID = utils.coronaStringAttack(coronaAttackHitRate, coronaDamageInt);
-		   string = utils.getString(commentID);
-		   coronaEnd = true;
-		   nextCommentPermission = true;
-
-		   soundAttack.play(0.2f);
-	   }
-
-	   if(coronaEnd && globuloEnd){
-		   coronaEnd = false;
-		   globuloEnd = false;
-		   roundBegin = true;
-		   coronaLife -= utils.decreaseLife(globuloDamageInt, coronaDefenceHitRate);
-		   globuloLife -= utils.decreaseLife(coronaDamageInt, globuloDefenceHitRate);
-	   }
-
-	   
-
-
-	   font.draw(batch, string, -350, -180);
-	   batch.end();
-	   globuloLifeBar.end();
-	   coronaLifeBar.end();
 	   
 	   
 
