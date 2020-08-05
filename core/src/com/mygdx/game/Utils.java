@@ -32,8 +32,9 @@ public class Utils{
         }
         return null;
     }
-    public int nextString(int idx, int coronaDamage, int coronaHit, int coronaDefence){
-        //System.out.println(coronaHit);
+    public int nextString(String str){
+        if(str == "Game Start   -   [ENTER]")
+            return 0;
         return 1;
     }
 
@@ -128,6 +129,20 @@ public class Utils{
         else if(life > 100)
             return Color.YELLOW;
         return Color.RED;
+    }
+
+    public int scoreGet(int coronaLife, int globuloLife){
+        return (globuloLife * 10) + ((300 - coronaLife)*10) ;
+    }
+
+    public String matchResult(int coronaLife, int globuloLife){
+        if(coronaLife <= 0 && globuloLife <= 0){
+            return "  Draw!";
+        }
+        else if(coronaLife <= 0)
+            return "You Win!";
+        else
+            return "You Lose";
     }
 
 
