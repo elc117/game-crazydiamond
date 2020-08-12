@@ -18,13 +18,13 @@ public class CoronaQuotes {
     public String checkGlobuloAim(int random){
         switch (random) {
             case 0:
-                return "      Bad aim huh?";
+                return "      Bad aim, huh?";
             case 1:
                 return "      Are you ok?";
             case 2:
                 return " You drop something";
             case 3:
-                return "     Thats... bad";
+                return "     That's... bad";
             case 4:
                 return "     Maybe?";
         }
@@ -34,9 +34,9 @@ public class CoronaQuotes {
     public String checkCoronaAim(int random){
         switch (random) {
             case 0:
-                return "      He is bad?";
+                return "      He is bad";
             case 1:
-                return "      Are he ok?";
+                return "      Is he ok?";
             case 2:
                 return "    He is... busy";
             case 3:
@@ -51,11 +51,11 @@ public class CoronaQuotes {
         if(damage < 90){
             switch (random) {
                 case 0:
-                    return "    Oh, he are fine";
+                    return "    Oh, he is fine";
                 case 1:
                     return "    Corona is happy";
                 case 2:
-                    return "      Boom Corona";
+                    return "      Boom, Corona";
                 case 3:
                     return "       Looks him";
                 case 4:
@@ -69,7 +69,7 @@ public class CoronaQuotes {
                 case 1:
                     return " Corona will kill you";
                 case 2:
-                    return "       BOOM Corona";
+                    return "       BOOM, Corona";
                 case 3:
                     return "    Don't look at him";
                 case 4:
@@ -87,7 +87,7 @@ public class CoronaQuotes {
                 case 2:
                     return "        Kaboom";
                 case 3:
-                    return "      You looks nice";
+                    return "      You look nice";
                 case 4:
                     return "A little big damage";
             }
