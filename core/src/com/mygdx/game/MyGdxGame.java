@@ -80,7 +80,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	private boolean basicAttackCorona = false;
 	private boolean userInteraction = true;
 	private boolean nextCommentPermission = true;
-	private boolean coronaLoseLife;
+	private boolean coronaLoseLife = false;
 	private boolean roundBegin = true;
 	private boolean globuloTurn = false;
 	private boolean coronaTurn = false;
@@ -276,9 +276,7 @@ public class MyGdxGame extends ApplicationAdapter {
 				
 				
 				System.out.println("GlobuloAttack:"+globuloDamageInt);
-				System.out.println("GlobuloDefence:"+globuloDefenceHitRate);
-				System.out.println("CoronaAttack:"+coronaDamageInt);
-				System.out.println("CoronaDefence:"+coronaDefenceHitRate);
+
 				CoronaQuotes quote = new CoronaQuotes();
 				string = quote.returnCoronaQuote(coronaDamageInt, globuloDamageInt, coronaAttackHitRate, globuloAttackHitRate);
 				nextCommentPermission = true;
@@ -301,7 +299,6 @@ public class MyGdxGame extends ApplicationAdapter {
 				}
 				else{
 					basicAttackCorona = true;
-					coronaDefenceHitRate = 0;
 				}
 			}
 
@@ -398,8 +395,12 @@ public class MyGdxGame extends ApplicationAdapter {
 				if(globuloAttackHitRate>=30)
 					soundAttack.play(0.2f);
 				if(!coronaWillDefence){
+					System.out.println("Damage: "+ globuloDamageInt);
+					System.out.println("Defence: "+ coronaDefenceHitRate);
+					coronaDefenceHitRate = 0;
 					coronaLife -= utils.decreaseLife(globuloDamageInt, coronaDefenceHitRate); 
 					coronaLoseLife = true;
+					System.out.println(utils.decreaseLife(globuloDamageInt, coronaDefenceHitRate));
 				}
 			}
 			
