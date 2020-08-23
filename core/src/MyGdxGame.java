@@ -32,15 +32,8 @@ public class MyGdxGame extends ApplicationAdapter {
 	
 
 	private SpriteBatch batch;
-
-	private TextureAtlas globulo;
-	private TextureAtlas corona;
-	private TextureAtlas globuloDef;
-	private TextureAtlas coronaDef;
-	private TextureAtlas globuloAttack;
-	private TextureAtlas coronaAttack;
-	private TextureAtlas commentBox; 
 	
+	private TextureAtlas commentBox; 
 	
 	private SimpleAnimation animationGlobulo;
 	private SimpleAnimation animationCorona;
